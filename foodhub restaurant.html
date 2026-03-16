@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="foodHubApp">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Food Hub — Rajkot's Finest Vegetarian Dining</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;0,700;1,300;1,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ============================
+   RESET & ROOT
+==============================*/
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:#0D0B08;
+  color:#E8DDD0;
+  overflow-x:hidden;
+  cursor:none;
+}
+
+/* ============================
+   CUSTOM CURSOR
+==============================*/
+#cursor{
+  position:fixed;width:10px;height:10px;
+  background:#C8860A;border-radius:50%;
+  pointer-events:none;z-index:99999;
+  transform:translate(-50%,-50%);
+  transition:width .2s,height .2s,opacity .2s;
+}
+#cursor-ring{
+  position:fixed;width:36px;height:36px;
+  border:1.5px solid rgba(200,134,10,.5);
+  border-radius:50%;pointer-events:none;
+  z-index:99998;transform:translate(-50%,-50%);
+  transition:all .12s ease;
+}
+body:hover #cursor{opacity:1}
+
+/* ============================
+   CSS VARIABLES
+==============================*/
+:root{
+  --gold:#C8860A;
+  --gold-light:#E8A020;
+  --amber:#F0B050;
+  --dark:#0D0B08;
+  --dark-2:#151208;
+  --dark-3:#1E1A12;
+  --dark-4:#2A2418;
+  --text:#E8DDD0;
+  --text-muted:#8A7D6E;
+  --text-dim:#5A5040;
+  --border:rgba(200,134,10,.15);
+  --shadow-gold:0 8px 40px rgba(200,134,10,.2);
+}
+
+/* ============================
+   SCROLLBAR
+==============================*/
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--dark)}
+::-webkit-scrollbar-thumb{background:var(--gold);border-radius:2px}
+
+/* ============================
+   NOISE TEXTURE OVERLAY
+==============================*/
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9997;opacity:.4;
+}
+
+/* ============================
+   NAVBAR
+==============================*/
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:22px 60px;
+  background:linear-gradient(180deg,rgba(13,11,8,.95) 0%,rgba(13,11,8,0) 100%);
+  transition:padding .3s,background .3s;
+}
+nav.scrolled{
+  padding:14px 60px;
+  background:rgba(13,11,8,.97);
+  border-bottom:1px solid var(--border);
+  backdrop-filter:blur(20px);
+}
+
+.logo{
+  display:flex;align-items:center;gap:14px;
+  text-decoration:none;
+}
+.logo-emblem{
+  width:44px;height:44px;
+  border:1.5px solid var(--gold);
+  border-radius:50%;
+  display:grid;place-items:center;
+  font-size:1.3rem;
+  position:relative;
+}
+.logo-emblem::before{
+  content:'';position:absolute;inset:-5px;
+  border-radius:50%;border:1px solid rgba(200,134,10,.2);
+}
+.logo-text{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.6rem;font-weight:600;
+  color:var(--text);letter-spacing:.04em;
+}
+.logo-text em{color:var(--gold);font-style:italic}
+
+.nav-links{
+  display:flex;gap:36px;list-style:none;
+  align-items:center;
+}
+.nav-links a{
+  color:var(--text-muted);font-size:.82rem;
+  letter-spacing:.12em;text-transform:uppercase;
+  text-decoration:none;font-weight:500;
+  transition:color .25s;
+  position:relative;
+}
+.nav-links a::after{
+  content:'';position:absolute;
+  bottom:-4px;left:0;width:0;height:1px;
+  background:var(--gold);transition:width .3s;
+}
+.nav-links a:hover{color:var(--amber)}
+.nav-links a:hover::after{width:100%}
+
+.nav-reserve{
+  padding:11px 28px;
+  border:1px solid var(--gold);
+  color:var(--gold);
+  background:transparent;
+  font-family:'DM Sans',sans-serif;
+  font-size:.78rem;letter-spacing:.14em;
+  text-transform:uppercase;font-weight:500;
+  cursor:none;
+  transition:all .25s;
+}
+.nav-reserve:hover{
+  background:var(--gold);color:var(--dark);
+}
+
+/* ============================
+   HERO
+==============================*/
+#hero{
+  min-height:100vh;
+  display:grid;grid-template-columns:1fr 1fr;
+  position:relative;overflow:hidden;
+}
+
+.hero-left{
+  display:flex;flex-direction:column;
+  justify-content:center;
+  padding:160px 60px 80px;
+  position:relative;z-index:2;
+}
+
+.hero-eyebrow{
+  display:flex;align-items:center;gap:16px;
+  margin-bottom:32px;
+}
+.hero-eyebrow-line{
+  width:48px;height:1px;background:var(--gold);
+}
+.hero-eyebrow span{
+  font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--gold);font-weight:500;
+}
+
+.hero-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(3.2rem,5.5vw,5.4rem);
+  font-weight:300;line-height:1.06;
+  color:var(--text);margin-bottom:28px;
+}
+.hero-title em{
+  font-style:italic;color:var(--gold);
+  display:block;
+}
+.hero-title strong{font-weight:600}
+
+.hero-desc{
+  font-size:.9rem;color:var(--text-muted);
+  line-height:1.85;max-width:420px;
+  margin-bottom:48px;font-weight:300;
+}
+
+.hero-actions{display:flex;gap:16px;align-items:center}
+.btn-gold{
+  padding:14px 36px;
+  background:var(--gold);color:var(--dark);
+  border:none;font-family:'DM Sans',sans-serif;
+  font-size:.8rem;letter-spacing:.14em;
+  text-transform:uppercase;font-weight:500;
+  cursor:none;transition:all .25s;
+  box-shadow:0 0 40px rgba(200,134,10,.3);
+}
+.btn-gold:hover{
+  background:var(--gold-light);
+  box-shadow:0 0 60px rgba(200,134,10,.5);
+  transform:translateY(-2px);
+}
+.btn-ghost{
+  color:var(--text-muted);font-size:.8rem;
+  letter-spacing:.12em;text-transform:uppercase;
+  background:none;border:none;cursor:none;
+  font-family:'DM Sans',sans-serif;font-weight:500;
+  transition:color .25s;display:flex;align-items:center;gap:8px;
+}
+.btn-ghost::after{content:'→';transition:transform .25s}
+.btn-ghost:hover{color:var(--amber)}
+.btn-ghost:hover::after{transform:translateX(5px)}
+
+.hero-stats{
+  display:flex;gap:48px;
+  margin-top:64px;
+  padding-top:48px;
+  border-top:1px solid var(--border);
+}
+.stat-num{
+  font-family:'Cormorant Garamond',serif;
+  font-size:2.4rem;font-weight:600;
+  color:var(--gold);line-height:1;
+}
+.stat-label{
+  font-size:.72rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--text-dim);
+  margin-top:6px;
+}
+
+.hero-right{
+  position:relative;overflow:hidden;
+}
+.hero-img-main{
+  width:100%;height:100%;object-fit:cover;
+  filter:brightness(.75) saturate(1.1);
+  transform:scale(1.05);
+  animation:heroZoom 12s ease infinite alternate;
+}
+@keyframes heroZoom{
+  from{transform:scale(1.05)}
+  to{transform:scale(1.12)}
+}
+
+.hero-right::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,var(--dark) 0%,transparent 40%);
+}
+
+.hero-badge{
+  position:absolute;bottom:48px;right:48px;z-index:5;
+  width:110px;height:110px;border-radius:50%;
+  background:var(--dark-3);border:1px solid var(--gold);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;
+  animation:rotateBadge 20s linear infinite;
+}
+@keyframes rotateBadge{
+  from{transform:rotate(0deg)}
+  to{transform:rotate(360deg)}
+}
+.hero-badge-inner{
+  position:absolute;animation:rotateBadge 20s linear infinite reverse;
+  display:flex;flex-direction:column;align-items:center;
+}
+.hero-badge-inner span:first-child{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.8rem;font-weight:600;color:var(--gold);
+}
+.hero-badge-inner small{
+  font-size:.58rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--text-muted);
+}
+
+/* ============================
+   MARQUEE TICKER
+==============================*/
+.ticker{
+  background:var(--gold);
+  padding:14px 0;overflow:hidden;
+  white-space:nowrap;
+}
+.ticker-inner{
+  display:inline-flex;gap:48px;
+  animation:tickerScroll 28s linear infinite;
+}
+.ticker-inner span{
+  font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--dark);font-weight:500;
+  display:flex;align-items:center;gap:16px;
+}
+.ticker-inner span::before{content:'✦'}
+@keyframes tickerScroll{
+  from{transform:translateX(0)}
+  to{transform:translateX(-50%)}
+}
+
+/* ============================
+   SECTION COMMONS
+==============================*/
+section{padding:112px 60px}
+
+.section-label{
+  display:flex;align-items:center;gap:16px;
+  margin-bottom:20px;
+}
+.section-label-line{width:32px;height:1px;background:var(--gold)}
+.section-label span{
+  font-size:.68rem;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--gold);font-weight:500;
+}
+
+.section-heading{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(2.4rem,4vw,3.8rem);
+  font-weight:300;color:var(--text);
+  line-height:1.1;
+}
+.section-heading em{font-style:italic;color:var(--gold)}
+.section-heading strong{font-weight:600}
+
+/* ============================
+   ABOUT
+==============================*/
+#about{
+  background:var(--dark-2);
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:80px;align-items:center;
+}
+
+.about-visual{
+  position:relative;height:560px;
+}
+.about-img-a{
+  width:66%;height:420px;object-fit:cover;
+  position:absolute;top:0;left:0;
+  filter:saturate(1.1) brightness(.85);
+}
+.about-img-b{
+  width:52%;height:300px;object-fit:cover;
+  position:absolute;bottom:0;right:0;
+  filter:saturate(1.1) brightness(.85);
+  border:3px solid var(--dark-2);
+}
+.about-year{
+  position:absolute;top:50%;left:55%;
+  transform:translate(-50%,-50%);
+  background:var(--gold);
+  width:96px;height:96px;border-radius:50%;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  color:var(--dark);
+}
+.about-year span:first-child{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.6rem;font-weight:700;line-height:1;
+}
+.about-year span:last-child{
+  font-size:.58rem;letter-spacing:.1em;
+  text-transform:uppercase;font-weight:500;
+}
+
+.about-content{padding-right:20px}
+.about-content .section-heading{margin-bottom:28px}
+.about-content p{
+  font-size:.9rem;color:var(--text-muted);
+  line-height:1.9;font-weight:300;margin-bottom:20px;
+}
+
+.about-pills{
+  display:flex;flex-wrap:wrap;gap:10px;margin-top:36px;
+}
+.pill{
+  padding:8px 18px;
+  border:1px solid var(--border);
+  color:var(--text-muted);font-size:.76rem;
+  letter-spacing:.1em;text-transform:uppercase;
+}
+
+/* ============================
+   MENU
+==============================*/
+#menu{background:var(--dark)}
+
+.menu-controls{
+  display:flex;align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;gap:20px;
+  margin-bottom:56px;
+}
+
+.filter-group{display:flex;gap:0;flex-wrap:wrap}
+.flt{
+  padding:10px 22px;
+  border:1px solid var(--border);
+  border-left:none;
+  background:transparent;
+  color:var(--text-dim);
+  font-family:'DM Sans',sans-serif;
+  font-size:.74rem;letter-spacing:.12em;
+  text-transform:uppercase;cursor:none;
+  transition:all .22s;
+}
+.flt:first-child{border-left:1px solid var(--border)}
+.flt.on{background:var(--gold);color:var(--dark);border-color:var(--gold)}
+.flt:hover:not(.on){color:var(--amber);border-color:rgba(200,134,10,.4)}
+
+.search-field{
+  position:relative;
+}
+.search-field input{
+  background:var(--dark-3);
+  border:1px solid var(--border);
+  color:var(--text);padding:10px 44px 10px 18px;
+  font-family:'DM Sans',sans-serif;font-size:.84rem;
+  outline:none;width:260px;
+  transition:border-color .25s;
+}
+.search-field input::placeholder{color:var(--text-dim)}
+.search-field input:focus{border-color:var(--gold)}
+.search-field::after{
+  content:'⌕';
+  position:absolute;right:14px;top:50%;
+  transform:translateY(-50%);
+  color:var(--text-dim);font-size:1.1rem;
+  pointer-events:none;
+}
+
+/* MENU GRID */
+.menu-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:1px;
+  border:1px solid var(--border);
+}
+
+.dish-card{
+  background:var(--dark-2);
+  cursor:none;overflow:hidden;
+  position:relative;
+  transition:background .3s;
+}
+.dish-card:hover{background:var(--dark-3)}
+
+.dish-card-img{
+  height:220px;overflow:hidden;
+  position:relative;
+}
+.dish-card-img img{
+  width:100%;height:100%;object-fit:cover;
+  filter:brightness(.8) saturate(1.15);
+  transition:transform .6s ease,filter .4s;
+}
+.dish-card:hover .dish-card-img img{
+  transform:scale(1.08);filter:brightness(.9) saturate(1.2);
+}
+.dish-card-img::after{
+  content:'';position:absolute;
+  inset:0;
+  background:linear-gradient(0deg,rgba(13,11,8,.7) 0%,transparent 60%);
+}
+
+.dish-pill-veg{
+  position:absolute;top:14px;left:14px;z-index:2;
+  display:flex;align-items:center;gap:5px;
+  background:rgba(13,11,8,.75);
+  border:1px solid #2E7D32;
+  padding:3px 10px;font-size:.65rem;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:#66BB6A;font-weight:500;
+  backdrop-filter:blur(4px);
+}
+.dish-pill-veg::before{
+  content:'';width:6px;height:6px;
+  border-radius:50%;background:#66BB6A;
+}
+
+.dish-tag{
+  position:absolute;top:14px;right:14px;z-index:2;
+  background:var(--gold);color:var(--dark);
+  padding:3px 10px;font-size:.62rem;
+  letter-spacing:.1em;text-transform:uppercase;font-weight:600;
+}
+
+.dish-body{padding:24px 24px 28px}
+.dish-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.4rem;font-weight:600;
+  color:var(--text);margin-bottom:8px;
+  line-height:1.2;
+}
+.dish-desc{
+  font-size:.8rem;color:var(--text-muted);
+  line-height:1.75;font-weight:300;margin-bottom:20px;
+}
+.dish-footer{
+  display:flex;align-items:center;justify-content:space-between;
+}
+.dish-price{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.5rem;font-weight:600;color:var(--gold);
+}
+.dish-price small{
+  font-family:'DM Sans',sans-serif;
+  font-size:.7rem;color:var(--text-dim);font-weight:300;
+}
+.dish-add{
+  width:38px;height:38px;
+  border:1px solid var(--border);
+  background:transparent;color:var(--gold);
+  font-size:1.3rem;cursor:none;
+  transition:all .22s;display:grid;place-items:center;
+}
+.dish-add:hover{background:var(--gold);color:var(--dark);border-color:var(--gold)}
+
+.no-results{
+  grid-column:1/-1;
+  padding:80px;text-align:center;
+  color:var(--text-dim);
+}
+.no-results-icon{font-size:3rem;display:block;margin-bottom:16px;opacity:.4}
+
+/* ============================
+   FEATURED BAND
+==============================*/
+#featured{
+  padding:0;
+  display:grid;grid-template-columns:1fr 1fr;
+  min-height:560px;
+}
+.feat-img{
+  position:relative;overflow:hidden;
+}
+.feat-img img{
+  width:100%;height:100%;object-fit:cover;
+  filter:brightness(.6) saturate(1.2);
+}
+.feat-img::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 60%,var(--dark-3) 100%);
+}
+.feat-content{
+  background:var(--dark-3);
+  display:flex;flex-direction:column;
+  justify-content:center;
+  padding:80px;
+  border-left:1px solid var(--border);
+}
+.feat-content .section-heading{margin-bottom:24px}
+.feat-content p{
+  font-size:.88rem;color:var(--text-muted);
+  line-height:1.9;font-weight:300;margin-bottom:36px;
+}
+.feat-items{display:flex;flex-direction:column;gap:0}
+.feat-item{
+  display:flex;align-items:center;
+  justify-content:space-between;
+  padding:18px 0;
+  border-bottom:1px solid var(--border);
+}
+.feat-item:last-child{border:none}
+.feat-item-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.1rem;font-weight:600;color:var(--text);
+}
+.feat-item-price{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1rem;color:var(--gold);
+}
+.feat-dots{
+  flex:1;
+  border-bottom:1px dotted var(--text-dim);
+  margin:0 16px;opacity:.3;
+}
+
+/* ============================
+   TESTIMONIALS
+==============================*/
+#testimonials{
+  background:var(--dark-2);
+  text-align:center;
+}
+#testimonials .section-label{justify-content:center}
+#testimonials .section-heading{margin-bottom:72px}
+
+.testi-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:1px;border:1px solid var(--border);
+}
+.testi-card{
+  background:var(--dark);
+  padding:48px 36px;
+  position:relative;
+  transition:background .3s;
+}
+.testi-card:hover{background:var(--dark-3)}
+.testi-card::before{
+  content:'"';
+  font-family:'Cormorant Garamond',serif;
+  font-size:6rem;font-style:italic;
+  color:var(--gold);opacity:.15;
+  position:absolute;top:20px;left:28px;
+  line-height:1;
+}
+.testi-stars{color:var(--gold);font-size:.85rem;margin-bottom:16px}
+.testi-text{
+  font-size:.88rem;color:var(--text-muted);
+  line-height:1.85;font-weight:300;font-style:italic;
+  margin-bottom:28px;
+}
+.testi-author{
+  font-family:'Cormorant Garamond',serif;
+  font-size:.95rem;font-weight:600;color:var(--text);
+}
+.testi-city{
+  font-size:.7rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--text-dim);margin-top:4px;
+}
+
+/* ============================
+   CONTACT
+==============================*/
+#contact{
+  background:var(--dark);
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:80px;align-items:start;
+}
+
+.contact-left .section-heading{margin-bottom:36px}
+
+.info-row{
+  display:flex;gap:20px;
+  padding:24px 0;
+  border-bottom:1px solid var(--border);
+}
+.info-row:first-of-type{border-top:1px solid var(--border)}
+.info-icon{
+  width:40px;height:40px;
+  border:1px solid var(--border);
+  display:grid;place-items:center;
+  font-size:1rem;flex-shrink:0;color:var(--gold);
+}
+.info-label{
+  font-size:.68rem;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--gold);margin-bottom:6px;
+}
+.info-val{
+  font-size:.88rem;color:var(--text-muted);line-height:1.6;
+}
+
+/* FORM */
+.res-form{
+  background:var(--dark-2);
+  border:1px solid var(--border);
+  padding:48px;
+}
+.res-form h3{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.8rem;font-weight:600;
+  color:var(--text);margin-bottom:36px;
+}
+
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.fg{margin-bottom:16px}
+.fg label{
+  display:block;font-size:.68rem;
+  letter-spacing:.14em;text-transform:uppercase;
+  color:var(--text-dim);margin-bottom:8px;font-weight:500;
+}
+.fg input,.fg textarea,.fg select{
+  width:100%;background:var(--dark);
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:12px 16px;
+  font-family:'DM Sans',sans-serif;font-size:.86rem;
+  outline:none;transition:border-color .25s;
+  -webkit-appearance:none;appearance:none;
+}
+.fg input:focus,.fg textarea:focus,.fg select:focus{border-color:var(--gold)}
+.fg input::placeholder,.fg textarea::placeholder{color:var(--text-dim)}
+.fg textarea{resize:vertical;min-height:96px}
+.fg select option{background:var(--dark-3)}
+
+.form-alert{
+  padding:14px 18px;font-size:.82rem;
+  margin-bottom:16px;display:none;
+  border-left:3px solid transparent;
+}
+.form-alert.ok{
+  display:block;color:#66BB6A;
+  background:rgba(102,187,106,.06);
+  border-color:#66BB6A;
+}
+.form-alert.err{
+  display:block;color:#EF5350;
+  background:rgba(239,83,80,.06);
+  border-color:#EF5350;
+}
+
+/* ============================
+   FOOTER
+==============================*/
+footer{
+  background:var(--dark-2);
+  border-top:1px solid var(--border);
+  padding:72px 60px 36px;
+}
+.footer-top{
+  display:grid;
+  grid-template-columns:2fr 1fr 1fr 1fr;
+  gap:56px;margin-bottom:56px;
+}
+.footer-about .logo-text{font-size:1.4rem}
+.footer-about p{
+  font-size:.82rem;color:var(--text-dim);
+  line-height:1.85;margin-top:18px;
+  max-width:280px;font-weight:300;
+}
+
+.footer-col h5{
+  font-size:.68rem;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--gold);
+  margin-bottom:20px;font-weight:500;
+}
+.footer-col ul{list-style:none}
+.footer-col ul li{margin-bottom:12px}
+.footer-col ul li a{
+  color:var(--text-dim);font-size:.82rem;
+  text-decoration:none;transition:color .2s;
+}
+.footer-col ul li a:hover{color:var(--amber)}
+
+.footer-bottom{
+  border-top:1px solid var(--border);
+  padding-top:28px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.footer-bottom p{font-size:.74rem;color:var(--text-dim)}
+.footer-bottom span{color:var(--gold)}
+
+/* ============================
+   MODAL
+==============================*/
+.modal-wrap{
+  position:fixed;inset:0;z-index:9000;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+  background:rgba(0,0,0,.85);
+  backdrop-filter:blur(8px);
+}
+.modal-panel{
+  background:var(--dark-2);
+  border:1px solid var(--border);
+  max-width:600px;width:100%;
+  max-height:90vh;overflow-y:auto;
+  animation:panelIn .35s cubic-bezier(.175,.885,.32,1.275);
+}
+@keyframes panelIn{
+  from{transform:translateY(40px) scale(.95);opacity:0}
+  to{transform:none;opacity:1}
+}
+.modal-img-wrap{position:relative;height:300px}
+.modal-img-wrap img{width:100%;height:100%;object-fit:cover;filter:brightness(.8)}
+.modal-close-btn{
+  position:absolute;top:16px;right:16px;
+  width:40px;height:40px;
+  background:rgba(13,11,8,.8);
+  border:1px solid var(--border);
+  color:var(--text);font-size:1.2rem;
+  cursor:none;display:grid;place-items:center;
+  transition:all .2s;z-index:2;
+}
+.modal-close-btn:hover{background:var(--gold);color:var(--dark);border-color:var(--gold)}
+.modal-content{padding:36px}
+.modal-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:2rem;font-weight:600;color:var(--text);
+  margin-bottom:6px;
+}
+.modal-stars{color:var(--gold);margin-bottom:14px}
+.modal-desc{
+  font-size:.88rem;color:var(--text-muted);
+  line-height:1.85;font-weight:300;margin-bottom:24px;
+}
+.modal-footer-bar{
+  display:flex;gap:12px;align-items:center;
+  border-top:1px solid var(--border);padding-top:24px;
+}
+.modal-price-big{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.8rem;font-weight:600;color:var(--gold);flex:1;
+}
+
+/* ============================
+   TOAST
+==============================*/
+.toast-bar{
+  position:fixed;bottom:36px;left:50%;
+  transform:translateX(-50%);
+  z-index:9999;
+  background:var(--dark-3);
+  border:1px solid var(--gold);
+  color:var(--text);
+  padding:14px 28px;
+  font-size:.82rem;letter-spacing:.06em;
+  white-space:nowrap;
+  animation:toastIn .4s ease,toastOut .4s ease 2.2s forwards;
+}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateX(-50%) translateY(10px)}}
+
+/* ============================
+   SCROLL-TO-TOP
+==============================*/
+.go-top{
+  position:fixed;bottom:36px;right:36px;z-index:888;
+  width:44px;height:44px;
+  border:1px solid var(--gold);
+  background:var(--dark-2);
+  color:var(--gold);font-size:1rem;
+  cursor:none;display:grid;place-items:center;
+  transition:all .25s;
+  box-shadow:0 4px 20px rgba(0,0,0,.4);
+}
+.go-top:hover{background:var(--gold);color:var(--dark)}
+
+/* ============================
+   ANIMATIONS ON LOAD
+==============================*/
+.fade-in{
+  opacity:0;transform:translateY(30px);
+  animation:fadeUp .8s ease forwards;
+}
+.fade-in:nth-child(1){animation-delay:.1s}
+.fade-in:nth-child(2){animation-delay:.22s}
+.fade-in:nth-child(3){animation-delay:.34s}
+.fade-in:nth-child(4){animation-delay:.46s}
+.fade-in:nth-child(5){animation-delay:.58s}
+@keyframes fadeUp{
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* ============================
+   RESPONSIVE
+==============================*/
+@media(max-width:1024px){
+  nav{padding:18px 32px}
+  nav.scrolled{padding:12px 32px}
+  .nav-links{display:none}
+  section{padding:80px 32px}
+  #hero{grid-template-columns:1fr;min-height:auto}
+  .hero-left{padding:140px 32px 64px}
+  .hero-right{height:360px}
+  #about,#contact{grid-template-columns:1fr;gap:48px}
+  .about-visual{height:340px}
+  #featured{grid-template-columns:1fr}
+  .feat-img{height:300px}
+  .feat-content{padding:48px 32px}
+  .testi-grid{grid-template-columns:1fr}
+  .footer-top{grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+  .menu-grid{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .hero-stats{gap:28px}
+  .footer-top{grid-template-columns:1fr}
+  .filter-group{flex-wrap:wrap}
+  .flt{border-left:1px solid var(--border)!important}
+}
+</style>
+</head>
+<body ng-controller="FoodHubCtrl">
+
+<!-- CURSOR -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- ══════════ NAV ══════════ -->
+<nav id="mainNav">
+  <a href="#hero" class="logo">
+    <div class="logo-emblem">🍛</div>
+    <span class="logo-text">Food <em>Hub</em></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#menu">Menu</a></li>
+    <li><a href="#featured">Specials</a></li>
+    <li><a href="#testimonials">Reviews</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <button class="nav-reserve" ng-click="scroll('contact')">Reserve Table</button>
+</nav>
+
+<!-- ══════════ HERO ══════════ -->
+<section id="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow fade-in">
+      <div class="hero-eyebrow-line"></div>
+      <span>Rajkot · Gujarat · Since 2009</span>
+    </div>
+    <h1 class="hero-title fade-in">
+      <strong>Pure Vegetarian</strong><br/>
+      <em>Dining,</em><br/>
+      Reimagined
+    </h1>
+    <p class="hero-desc fade-in">
+      Food Hub is Rajkot's most celebrated vegetarian destination — where
+      Gujarat's ancient culinary traditions meet a refined, contemporary dining
+      experience. Every dish tells a story of flavour, heritage, and care.
+    </p>
+    <div class="hero-actions fade-in">
+      <button class="btn-gold" ng-click="scroll('menu')">Explore Menu</button>
+      <button class="btn-ghost" ng-click="scroll('about')">Our Story</button>
+    </div>
+    <div class="hero-stats fade-in">
+      <div>
+        <div class="stat-num">15+</div>
+        <div class="stat-label">Years of Legacy</div>
+      </div>
+      <div>
+        <div class="stat-num">60+</div>
+        <div class="stat-label">Veg Dishes</div>
+      </div>
+      <div>
+        <div class="stat-num">4.8★</div>
+        <div class="stat-label">Google Rating</div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-right">
+    <img class="hero-img-main"
+         src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=85"
+         alt="Food Hub Restaurant"/>
+    <div class="hero-badge">
+      <div class="hero-badge-inner">
+        <span>100%</span>
+        <small>Pure Veg</small>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ TICKER ══════════ -->
+<div class="ticker">
+  <div class="ticker-inner">
+    <span>Gujarati Thali</span>
+    <span>Paneer Butter Masala</span>
+    <span>Dal Makhani</span>
+    <span>Palak Paneer</span>
+    <span>Undhiyu</span>
+    <span>Pav Bhaji</span>
+    <span>Shahi Paneer</span>
+    <span>Kadhi Khichdi</span>
+    <span>Butter Naan</span>
+    <span>Ragda Pattice</span>
+    <!-- duplicate for seamless loop -->
+    <span>Gujarati Thali</span>
+    <span>Paneer Butter Masala</span>
+    <span>Dal Makhani</span>
+    <span>Palak Paneer</span>
+    <span>Undhiyu</span>
+    <span>Pav Bhaji</span>
+    <span>Shahi Paneer</span>
+    <span>Kadhi Khichdi</span>
+    <span>Butter Naan</span>
+    <span>Ragda Pattice</span>
+  </div>
+</div>
+
+<!-- ══════════ ABOUT ══════════ -->
+<section id="about">
+  <div class="about-visual">
+    <img class="about-img-a"
+         src="https://images.unsplash.com/photo-1596797038530-2c107229654b?w=700&q=80"
+         alt="Gujarati Thali spread"/>
+    <img class="about-img-b"
+         src="https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=500&q=80"
+         alt="Paneer dish"/>
+    <div class="about-year">
+      <span>2009</span>
+      <span>Est.</span>
+    </div>
+  </div>
+  <div class="about-content">
+    <div class="section-label">
+      <div class="section-label-line"></div>
+      <span>Our Heritage</span>
+    </div>
+    <h2 class="section-heading">
+      Rooted in <em>Rajkot,</em><br/>
+      <strong>Born to Nourish</strong>
+    </h2>
+    <p>
+      Founded in 2009 on the busy streets of Yagnik Road, Food Hub began as
+      a humble family kitchen. Today it stands as one of Rajkot's most cherished
+      dining institutions — a place where the soul of Gujarati cooking lives on
+      in every pot, every tawa, every bite.
+    </p>
+    <p>
+      We grind our own spices each morning, source seasonal vegetables from local
+      farms in Saurashtra, and cook each dish to order — because real flavour
+      cannot be rushed. Jain-friendly and no-onion/garlic options are always available.
+    </p>
+    <div class="about-pills">
+      <span class="pill">Fresh Daily Masalas</span>
+      <span class="pill">Jain Options</span>
+      <span class="pill">No Preservatives</span>
+      <span class="pill">Local Produce</span>
+      <span class="pill">Award-Winning Thali</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ MENU ══════════ -->
+<section id="menu">
+  <div class="section-label">
+    <div class="section-label-line"></div>
+    <span>Our Menu</span>
+  </div>
+  <h2 class="section-heading" style="margin-bottom:56px">
+    <strong>Signature</strong> <em>Dishes</em>
+  </h2>
+
+  <div class="menu-controls">
+    <div class="filter-group">
+      <button class="flt" ng-class="{on: cat==='All'}" ng-click="cat='All'">All</button>
+      <button class="flt" ng-class="{on: cat===c}" ng-click="cat=c"
+              ng-repeat="c in cats">{{c}}</button>
+    </div>
+    <div class="search-field">
+      <input type="text" ng-model="q" placeholder="Search dishes…"/>
+    </div>
+  </div>
+
+  <div class="menu-grid">
+    <div class="dish-card"
+         ng-repeat="item in dishes | filter:dishFilter | filter:{category: cat==='All' ? '' : cat}"
+         ng-click="openDish(item)">
+      <div class="dish-card-img">
+        <img ng-src="{{item.img}}" alt="{{item.name}}" loading="lazy"/>
+        <span class="dish-pill-veg">Veg</span>
+        <span class="dish-tag" ng-if="item.tag">{{item.tag}}</span>
+      </div>
+      <div class="dish-body">
+        <h3 class="dish-name">{{item.name}}</h3>
+        <p class="dish-desc">{{item.short}}</p>
+        <div class="dish-footer">
+          <div class="dish-price">₹{{item.price}}<small>/plate</small></div>
+          <button class="dish-add" ng-click="$event.stopPropagation(); addCart(item)" title="Add to order">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="no-results"
+         ng-show="(dishes | filter:dishFilter | filter:{category: cat==='All' ? '' : cat}).length === 0">
+      <span class="no-results-icon">🍽</span>
+      No dishes match "{{q}}"
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ FEATURED BAND ══════════ -->
+<section id="featured" style="padding:0">
+  <div class="feat-img">
+    <img src="https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=900&q=80"
+         alt="Gujarati spread" style="width:100%;height:100%;object-fit:cover;filter:brightness(.6) saturate(1.2)"/>
+  </div>
+  <div class="feat-content">
+    <div class="section-label">
+      <div class="section-label-line"></div>
+      <span>Today's Specials</span>
+    </div>
+    <h2 class="section-heading">
+      <em>Chef's</em><br/><strong>Selections</strong>
+    </h2>
+    <p>
+      Each day our kitchen highlights a curated selection of dishes — crafted
+      with the finest seasonal produce and a touch of extra love.
+    </p>
+    <div class="feat-items">
+      <div class="feat-item" ng-repeat="s in specials">
+        <span class="feat-item-name">{{s.name}}</span>
+        <div class="feat-dots"></div>
+        <span class="feat-item-price">₹{{s.price}}</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ TESTIMONIALS ══════════ -->
+<section id="testimonials">
+  <div class="section-label">
+    <div class="section-label-line"></div>
+    <span>Guest Reviews</span>
+  </div>
+  <h2 class="section-heading">What Our <em>Guests</em> Say</h2>
+  <div class="testi-grid">
+    <div class="testi-card" ng-repeat="t in reviews">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-text">{{t.text}}</p>
+      <div class="testi-author">{{t.name}}</div>
+      <div class="testi-city">{{t.city}}</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ CONTACT ══════════ -->
+<section id="contact">
+  <div class="contact-left">
+    <div class="section-label">
+      <div class="section-label-line"></div>
+      <span>Visit Us</span>
+    </div>
+    <h2 class="section-heading" style="margin-bottom:0">
+      Come Dine<br/><em>with Us</em>
+    </h2>
+    <div class="info-row">
+      <div class="info-icon">📍</div>
+      <div>
+        <div class="info-label">Address</div>
+        <div class="info-val">Shop 12, Yagnik Road<br/>Rajkot – 360001, Gujarat</div>
+      </div>
+    </div>
+    <div class="info-row">
+      <div class="info-icon">🕐</div>
+      <div>
+        <div class="info-label">Hours</div>
+        <div class="info-val">Mon–Sat: 11:00 AM – 10:30 PM<br/>Sunday: 10:00 AM – 11:00 PM</div>
+      </div>
+    </div>
+    <div class="info-row">
+      <div class="info-icon">📞</div>
+      <div>
+        <div class="info-label">Phone</div>
+        <div class="info-val">+91 98765 43210<br/>+91 02812 123456</div>
+      </div>
+    </div>
+    <div class="info-row">
+      <div class="info-icon">✉</div>
+      <div>
+        <div class="info-label">Email</div>
+        <div class="info-val">hello@foodhubrajkot.com</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="res-form">
+    <h3>Reserve Your Table</h3>
+    <div class="form-alert" ng-class="{ok: msg.type==='ok', err: msg.type==='err'}">{{msg.text}}</div>
+    <div class="form-row">
+      <div class="fg">
+        <label>Full Name</label>
+        <input type="text" ng-model="res.name" placeholder="Rajesh Shah"/>
+      </div>
+      <div class="fg">
+        <label>Phone</label>
+        <input type="tel" ng-model="res.phone" placeholder="+91 98765 43210"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="fg">
+        <label>Date</label>
+        <input type="date" ng-model="res.date"/>
+      </div>
+      <div class="fg">
+        <label>Time</label>
+        <input type="time" ng-model="res.time"/>
+      </div>
+    </div>
+    <div class="fg">
+      <label>Guests</label>
+      <select ng-model="res.guests">
+        <option value="">Select guests</option>
+        <option ng-repeat="n in [1,2,3,4,5,6,7,8]" value="{{n}}">{{n}} {{n==1?'Guest':'Guests'}}</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label>Special Requests</label>
+      <textarea ng-model="res.note" placeholder="Jain food, birthday arrangement, high chair…"></textarea>
+    </div>
+    <button class="btn-gold" style="width:100%;padding:16px" ng-click="submitRes()">
+      Confirm Reservation →
+    </button>
+  </div>
+</section>
+
+<!-- ══════════ FOOTER ══════════ -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-about">
+      <div class="logo">
+        <div class="logo-emblem">🍛</div>
+        <span class="logo-text">Food <em>Hub</em></span>
+      </div>
+      <p>Rajkot's beloved vegetarian restaurant — celebrating Gujarat's rich culinary heritage since 2009. Every meal, a memory.</p>
+    </div>
+    <div class="footer-col">
+      <h5>Navigate</h5>
+      <ul>
+        <li><a href="#hero">Home</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#menu">Menu</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h5>Cuisine</h5>
+      <ul>
+        <li><a href="#">Gujarati Thali</a></li>
+        <li><a href="#">North Indian</a></li>
+        <li><a href="#">Jain Special</a></li>
+        <li><a href="#">Street Food</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h5>Order Online</h5>
+      <ul>
+        <li><a href="#">Zomato</a></li>
+        <li><a href="#">Swiggy</a></li>
+        <li><a href="#">Instagram</a></li>
+        <li><a href="#">Facebook</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 Food Hub, Rajkot. All rights reserved.</p>
+    <p>Made with <span>♥</span> in Gujarat</p>
+  </div>
+</footer>
+
+<!-- ══════════ MODAL ══════════ -->
+<div class="modal-wrap" ng-show="activeDish" ng-click="closeDish()">
+  <div class="modal-panel" ng-click="$event.stopPropagation()" ng-if="activeDish">
+    <div class="modal-img-wrap">
+      <img ng-src="{{activeDish.img}}" alt="{{activeDish.name}}"/>
+      <button class="modal-close-btn" ng-click="closeDish()">✕</button>
+    </div>
+    <div class="modal-content">
+      <h2 class="modal-name">{{activeDish.name}}</h2>
+      <div class="modal-stars">★★★★★</div>
+      <p class="modal-desc">{{activeDish.full}}</p>
+      <div class="modal-footer-bar">
+        <div class="modal-price-big">₹{{activeDish.price}}</div>
+        <button class="btn-gold" ng-click="addCart(activeDish); closeDish()">+ Add to Order</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ TOAST ══════════ -->
+<div class="toast-bar" ng-show="toast">✦ {{toastTxt}}</div>
+
+<!-- ══════════ SCROLL TOP ══════════ -->
+<button class="go-top" ng-click="scroll('hero')" title="Top">↑</button>
+
+<!-- ══════════ ANGULAR APP ══════════ -->
+<script>
+angular.module('foodHubApp',[])
+.controller('FoodHubCtrl',['$scope','$timeout',function($s,$t){
+
+  /* ─── DATA ─── */
+  $s.cats = ['Main Course','Dal & Lentils','Street Food','Gujarati','Breads & Rice'];
+  $s.cat  = 'All';
+  $s.q    = '';
+  $s.activeDish = null;
+  $s.toast = false;
+  $s.toastTxt = '';
+  $s.msg  = {};
+  $s.res  = {};
+
+  $s.dishes = [
+    
+  {
+    name: 'Paneer Butter Masala',
+    category: 'Main Course',
+    tag: "Chef's Pick",
+    price: 220,
+    img: 'https://aartimadan.com/wp-content/uploads/2023/11/Paneer-Butter-Masala-Restaurant-Style.jpg',
+    short: 'Soft paneer in a rich, velvety tomato-butter gravy.',
+    full: 'Silky tomato-cashew gravy slow-cooked with butter and whole spices, housing cubes of fresh paneer and finished with cream and kasuri methi.'
+  },
+  {
+    name: 'Palak Paneer',
+    category: 'Main Course',
+    tag: 'Bestseller',
+    price: 200,
+    img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSTa0vMZXRWCqeT6LPG6YbA2wDxk8iisAMwQw&s',
+    short: 'Paneer in silky fresh spinach and spice gravy.',
+    full: 'Blanched spinach blended to a smooth, aromatic base with garlic, green chilli and spices.'
+  },
+  {
+    name: 'Shahi Paneer',
+    category: 'Main Course',
+    price: 240,
+    img: 'https://t4.ftcdn.net/jpg/08/24/35/87/360_F_824358712_32xGA30Y1XNegYq50MzFMGBJhyk04Pyv.jpg',
+    short: 'Royal almond-cashew gravy with saffron-kissed paneer.',
+    full: 'A regal Mughal-inspired dish — almond and cashew paste simmered with onion, saffron, and cardamom.'
+  },
+  {
+    name: 'Aloo Gobi',
+    category: 'Main Course',
+    price: 160,
+    img: 'https://ministryofcurry.com/wp-content/uploads/2017/04/Aloo-Gobi-5-500x375.jpg',
+    short: 'Classic dry potato and cauliflower with cumin and turmeric.',
+    full: 'Potato and cauliflower tossed in whole cumin, turmeric, green chilli and fresh coriander.'
+  },
+  {
+    name: 'Matar Paneer',
+    category: 'Main Course',
+    price: 190,
+    img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWDb_FLchJt2V0MGo8Gefqx7dH4Rv3YSqaeQ&s',
+    short: 'Green peas and paneer in a tangy tomato masala.',
+    full: 'Plump green peas and fresh paneer simmered in a flavourful tomato-onion masala.'
+  },
+  {
+    name: 'Dal Makhani',
+    category: 'Dal & Lentils',
+    tag: 'Must Try',
+    price: 180,
+    img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQlWiS_VusrpDLbKnB1APOEMKfbDMfbbzL8TA&s',
+    short: 'Overnight slow-cooked black urad dal with butter and cream.',
+    full: 'Whole black lentils and kidney beans slow-cooked for hours in a buttery tomato gravy.'
+  },
+  {
+    name: 'Gujarati Dal',
+    category: 'Dal & Lentils',
+    tag: 'Regional',
+    price: 140,
+    img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQmkpab_dlg7Bup1Jv52wQsdhbMAtDSOI9ZFQ&s',
+    short: 'Sweet-tangy toor dal with peanuts and curry leaf tempering.',
+    full: 'Toor dal with peanuts, raw mango, jaggery and tomatoes, tempered in mustard seeds.'
+  },
+  {
+    name: 'Dal Tadka',
+    category: 'Dal & Lentils',
+    price: 150,
+    img: 'https://img.freepik.com/free-photo/indian-dhal-spicy-curry-bowl-spices-herbs-rustic-black-wooden-table_2829-18712.jpg?semt=ais_hybrid&w=740&q=80',
+    short: 'Yellow lentils with a sizzling ghee and cumin tadka.',
+    full: 'Smooth moong and masoor dal finished with a fiery tempering of pure ghee and garlic.'
+  },
+  {
+    name: 'Pav Bhaji',
+    category: 'Street Food',
+    tag: 'Fan Favourite',
+    price: 130,
+    img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSbAkmrFvae2JywfLhlJztbFmrlan9MEqYpbg&s',
+    short: 'Mumbai-style spiced vegetable mash with toasted pav.',
+    full: 'A sizzling butter-laden mash of vegetables served with soft toasted pav rolls.'
+  },
+  {
+    name: 'Ragda Pattice',
+    category: 'Street Food',
+    tag: 'Gujarati Fave',
+    price: 110,
+    img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHzLP6CUjC3Aa2VuL3SO7mI1fy68mBgMLFng&s',
+    short: 'Crispy potato patties with white pea ragda and chutneys.',
+    full: 'Crispy spiced potato patties drowning in a flavourful white pea ragda.'
+  },
+  {
+    name: 'Gujarati Thali',
+    category: 'Gujarati',
+    tag: 'Complete Meal',
+    price: 350,
+    img: 'https://t3.ftcdn.net/jpg/15/00/54/12/360_F_1500541282_s7RUQvNfSfle9Zm20C5dYVWohTVaChxU.jpg',
+    short: 'Unlimited thali with dal, sabzi, rotli, rice, farsan and mithai.',
+    full: 'A legendary celebration of Gujarat featuring diverse small bowls of regional specialties.'
+  },
+  {
+    name: 'Undhiyu',
+    category: 'Gujarati',
+    tag: 'Seasonal',
+    price: 220,
+    img: 'https://madhurasrecipe.com/wp-content/uploads/2020/10/Surati-Undhiyu-Marathi-Recipe.jpg',
+    short: 'Winter Surat delicacy — mixed vegetables with methi muthia.',
+    full: 'A seasonal treasure of root vegetables and fenugreek dumplings.'
+  },
+  {
+    name: 'Kadhi Khichdi',
+    category: 'Gujarati',
+    price: 170,
+    img: 'https://www.foodiaq.com/wp-content/uploads/2024/02/Kadi-Khichadi-scaled.jpg',
+    short: 'Soft moong dal khichdi with sweet-tangy Gujarati kadhi.',
+    full: 'A warm bowl of moong dal and rice khichdi paired with yogurt-based kadhi.'
+  },
+  {
+    name: 'Butter Naan',
+    category: 'Breads & Rice',
+    price: 60,
+    img: 'https://t3.ftcdn.net/jpg/08/95/50/04/360_F_895500474_IDUMxbOGEBn29tyPyjG8oLEEWlK8ZlOg.jpg',
+    short: 'Tandoor-baked naan brushed with real white butter.',
+    full: 'Hand-stretched and fired in a wood-burning tandoor, finished with butter.'
+  },
+  {
+    name: 'Jeera Rice',
+    category: 'Breads & Rice',
+    price: 120,
+    img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQLmhWufg92dgPRqTXjfacfJ6YvYa1Yqd8DA&s',
+    short: 'Fragrant basmati tempered with cumin seeds and ghee.',
+    full: 'Long-grain Basmati rice tempered in pure desi ghee with whole cumin seeds.'
+  }
+
+  ];
+
+  $s.specials = [
+    {name:'Gujarati Thali (Unlimited)',price:350},
+    {name:'Paneer Butter Masala + Naan',price:280},
+    {name:'Dal Makhani + Jeera Rice',price:300},
+    {name:'Palak Paneer + Paratha',price:260},
+    {name:'Pav Bhaji (Double Pav)',price:150}
+  ];
+
+  $s.reviews = [
+    {
+      text:'The Gujarati Thali at Food Hub is the closest thing to my grandmother\'s cooking I have ever found in a restaurant. The dal, the kadhi, the rotli — every element is crafted with such care and authenticity.',
+      name:'Priya Mehta', city:'Rajkot, Gujarat'
+    },
+    {
+      text:'I have eaten at many restaurants across Gujarat but Food Hub\'s Dal Makhani is genuinely extraordinary. The slow-cook depth of flavour is something else entirely. We visit every Sunday without fail.',
+      name:'Arjun Desai', city:'Ahmedabad, Gujarat'
+    },
+    {
+      text:'As a Jain, finding a restaurant that understands our requirements and still delivers such incredible food is rare. Food Hub does it effortlessly and the staff are wonderfully attentive.',
+      name:'Kavya Shah', city:'Rajkot, Gujarat'
+    }
+  ];
+
+  /* ─── FILTER ─── */
+  $s.dishFilter = function(item){
+    if(!$s.q) return true;
+    var q = $s.q.toLowerCase();
+    return item.name.toLowerCase().indexOf(q) > -1 ||
+           item.short.toLowerCase().indexOf(q) > -1 ||
+           item.category.toLowerCase().indexOf(q) > -1;
+  };
+
+  /* ─── MODAL ─── */
+  $s.openDish = function(item){ $s.activeDish = item; };
+  $s.closeDish = function(){ $s.activeDish = null; };
+
+  /* ─── CART ─── */
+  $s.addCart = function(item){
+    $s.toastTxt = item.name + ' added to your order';
+    $s.toast = true;
+    $t(function(){ $s.toast = false; }, 2600);
+  };
+
+  /* ─── RESERVATION ─── */
+  $s.submitRes = function(){
+    var r = $s.res;
+    if(!r.name || !r.phone || !r.date || !r.time || !r.guests){
+      $s.msg = {type:'err', text:'Please fill in all required fields.'};
+    } else {
+      $s.msg = {type:'ok', text:'Table confirmed for ' + r.guests + ' guest(s) on ' + r.date + ' at ' + r.time + '. We look forward to welcoming you!'};
+      $s.res = {};
+    }
+    $t(function(){ $s.msg = {}; }, 6000);
+  };
+
+  /* ─── SCROLL ─── */
+  $s.scroll = function(id){
+    var el = document.getElementById(id);
+    if(el) el.scrollIntoView({behavior:'smooth'});
+  };
+}])
+
+/* ─── CURSOR & NAV SCROLL (vanilla JS) ─── */
+.run(['$document',function($doc){
+  var d = document.getElementById('cursor');
+  var r = document.getElementById('cursor-ring');
+  var rx=0, ry=0;
+
+  document.addEventListener('mousemove',function(e){
+    if(d) { d.style.left = e.clientX+'px'; d.style.top = e.clientY+'px'; }
+    rx += (e.clientX - rx) * 0.12;
+    ry += (e.clientY - ry) * 0.12;
+    if(r) { r.style.left = e.clientX+'px'; r.style.top = e.clientY+'px'; }
+  });
+
+  window.addEventListener('scroll',function(){
+    var nav = document.getElementById('mainNav');
+    if(nav){
+      if(window.scrollY > 60){ nav.classList.add('scrolled'); }
+      else { nav.classList.remove('scrolled'); }
+    }
+  });
+}]);
+</script>
+</body>
+</html>
